@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>English Fun! ⭐</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --purple:#7c3aed; --purple-light:#a78bfa; --blue:#60a5fa;
+  --green:#34d399; --green-dark:#059669; --red:#f87171;
+  --yellow:#f59e0b; --orange:#f97316; --card-radius:24px; --btn-radius:16px;
+}
+html,body { height:100%; overscroll-behavior:none; }
+body {
+  font-family:'Nunito',sans-serif; min-height:100dvh;
+  background:linear-gradient(160deg,#a78bfa 0%,#60a5fa 50%,#34d399 100%);
+  background-attachment:fixed;
+  display:flex; flex-direction:column; align-items:center;
+  padding:16px 12px 32px; overflow-x:hidden;
+}
+.header { text-align:center; margin-bottom:12px; width:100%; }
+.title {
+  font-family:'Fredoka One',cursive; font-size:clamp(1.8rem,6vw,3rem);
+  color:white; text-shadow:3px 4px 0 rgba(0,0,0,0.18); letter-spacing:2px; line-height:1.1;
+}
+.stars-display {
+  background:white; border-radius:50px; padding:6px 20px;
+  font-weight:900; font-size:clamp(0.95rem,3vw,1.15rem);
+  color:var(--yellow); box-shadow:0 4px 18px rgba(0,0,0,0.12);
+  display:inline-block; margin-top:6px;
+}
+/* MODE SELECTOR — 3 buttons */
+.mode-selector {
+  display:flex; gap:8px; margin-bottom:14px;
+  background:rgba(255,255,255,0.25); border-radius:18px; padding:6px;
+  width:100%; max-width:500px;
+}
+.mode-btn {
+  flex:1; padding:clamp(9px,2vw,12px) 4px; border:none; border-radius:13px;
+  font-family:'Fredoka One',cursive; font-size:clamp(0.78rem,2.2vw,0.92rem);
+  cursor:pointer; transition:all 0.25s; background:transparent; color:white;
+  touch-action:manipulation; line-height:1.2;
+}
+.mode-btn.active {
+  background:white; color:var(--purple);
+  box-shadow:0 4px 14px rgba(0,0,0,0.15); transform:scale(1.04);
+}
+.mode-btn:not(.active):hover { background:rgba(255,255,255,0.2); }
+
+/* CARD */
+.card {
+  width:100%; max-width:500px; background:white;
+  border-radius:var(--card-radius);
+  padding:clamp(18px,4vw,26px) clamp(14px,4vw,22px);
+  box-shadow:0 20px 60px rgba(0,0,0,0.18);
+  text-align:center; position:relative; transition:box-shadow 0.3s;
+}
+.card.correct-flash { box-shadow:0 0 0 5px var(--green),0 20px 60px rgba(52,211,153,0.3); animation:correct-pop 0.5s ease; }
+.card.wrong-flash   { box-shadow:0 0 0 5px var(--red),0 20px 60px rgba(248,113,113,0.3); animation:wrong-shake 0.4s ease; }
+@keyframes correct-pop  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.025)} }
+@keyframes wrong-shake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+.question-label {
+  font-size:clamp(0.72rem,2vw,0.85rem); color:#9ca3af; font-weight:700;
+  text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;
+  min-height:1.8em; display:flex; align-items:center; justify-content:center;
+}
+.attempts-badge {
+  position:absolute; top:12px; right:12px;
+  background:#fef3c7; color:#92400e; border-radius:50px;
+  padding:3px 10px; font-size:0.75rem; font-weight:800; display:none;
+}
+
+/* ===== CLOCK ===== */
+.clock-wrap { display:flex; justify-content:center; margin-bottom:10px; }
+.clock-svg { filter:drop-shadow(0 5px 14px rgba(124,58,237,0.22)); width:clamp(120px,32vw,160px); height:clamp(120px,32vw,160px); }
+.time-hebrew { font-family:'Fredoka One',cursive; font-size:clamp(1.6rem,5.5vw,2.2rem); color:#4c1d95; margin-bottom:10px; direction:rtl; }
+
+/* ===== NUMBER ===== */
+.number-big { font-family:'Fredoka One',cursive; font-size:clamp(3rem,13vw,5rem); color:#4c1d95; line-height:1; margin-bottom:4px; }
+
+/* ===== VOCAB WORD DISPLAY ===== */
+.vocab-word-wrap { margin-bottom:14px; }
+.vocab-word {
+  font-family:'Fredoka One',cursive; font-size:clamp(2rem,8vw,3rem);
+  color:#4c1d95; letter-spacing:1px; line-height:1.1;
+}
+.vocab-speak-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  margin-top:8px; padding:6px 16px; border:none; border-radius:50px;
+  background:linear-gradient(135deg,var(--purple-light),var(--blue));
+  color:white; font-family:'Fredoka One',cursive; font-size:0.9rem;
+  cursor:pointer; box-shadow:0 3px 10px rgba(124,58,237,0.3);
+  transition:transform 0.15s; touch-action:manipulation;
+}
+.vocab-speak-btn:hover { transform:scale(1.05); }
+.vocab-speak-btn:active { transform:scale(0.97); }
+
+/* ===== VOCAB CHOICES GRID ===== */
+.vocab-grid {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:10px; margin-bottom:10px;
+}
+.vocab-choice {
+  padding:12px 8px 10px;
+  border:2.5px solid #e5e7eb; border-radius:18px;
+  background:#f9fafb; cursor:pointer;
+  transition:all 0.2s; touch-action:manipulation;
+  -webkit-user-select:none; user-select:none;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+}
+.vocab-choice:hover:not(:disabled) {
+  border-color:var(--purple-light); background:#f5f3ff;
+  transform:translateY(-2px); box-shadow:0 4px 12px rgba(167,139,250,0.3);
+}
+.vocab-choice:active:not(:disabled) { transform:scale(0.97); }
+.vocab-choice:disabled { cursor:default; }
+.vocab-choice .vc-emoji { font-size:clamp(2rem,8vw,3rem); line-height:1; }
+.vocab-choice .vc-hebrew {
+  font-family:'Nunito',sans-serif; font-weight:800;
+  font-size:clamp(0.82rem,2.5vw,1rem); color:#374151;
+  direction:rtl; line-height:1.2;
+}
+.vocab-choice.correct-choice { border-color:var(--green); background:#f0fdf4; box-shadow:0 0 0 2px var(--green); }
+.vocab-choice.correct-choice .vc-hebrew { color:#065f46; }
+.vocab-choice.wrong-choice   { border-color:var(--red);   background:#fef2f2; animation:btn-shake 0.35s ease; }
+.vocab-choice.wrong-choice   .vc-hebrew { color:#991b1b; }
+.vocab-choice.reveal-correct { border-color:var(--green); background:#f0fdf4; opacity:0.8; }
+
+/* ===== CLOCK/NUMBER CHOICES ===== */
+.choices-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+.choice-btn {
+  padding:clamp(11px,2.5vw,15px) 8px; border:2.5px solid #e5e7eb;
+  border-radius:var(--btn-radius); background:#f9fafb;
+  font-family:'Nunito',sans-serif; font-size:clamp(0.8rem,2.2vw,0.95rem);
+  font-weight:800; color:#1f2937; cursor:pointer; transition:all 0.2s;
+  line-height:1.3; touch-action:manipulation; -webkit-user-select:none; user-select:none;
+}
+.choice-btn:hover:not(:disabled) { border-color:var(--purple-light); background:#f5f3ff; transform:translateY(-2px); box-shadow:0 4px 10px rgba(167,139,250,0.3); }
+.choice-btn:active:not(:disabled) { transform:scale(0.97); }
+.choice-btn:disabled { cursor:default; }
+.choice-btn.correct-choice { border-color:var(--green); background:#f0fdf4; color:#065f46; box-shadow:0 0 0 2px var(--green); }
+.choice-btn.wrong-choice   { border-color:var(--red); background:#fef2f2; color:#991b1b; animation:btn-shake 0.35s ease; }
+.choice-btn.reveal-correct { border-color:var(--green); background:#f0fdf4; color:#065f46; opacity:0.8; }
+@keyframes btn-shake { 0%,100%{transform:translateX(0)} 30%{transform:translateX(-5px)} 70%{transform:translateX(5px)} }
+
+/* INPUT */
+.answer-input {
+  width:100%; padding:clamp(12px,2.5vw,15px) 16px;
+  border:2.5px solid #e5e7eb; border-radius:var(--btn-radius);
+  font-size:clamp(1.1rem,3.5vw,1.3rem); font-family:'Nunito',sans-serif;
+  font-weight:700; text-align:center; outline:none;
+  transition:border-color 0.2s,background 0.2s;
+  color:#1f2937; background:#f9fafb; margin-bottom:10px; touch-action:manipulation;
+}
+.answer-input:focus   { border-color:var(--purple-light); background:white; }
+.answer-input.correct { border-color:var(--green); background:#f0fdf4; color:#065f46; }
+.answer-input.wrong   { border-color:var(--red);   background:#fef2f2; color:#991b1b; }
+
+/* BUTTONS */
+.action-row { display:flex; gap:8px; margin-top:4px; align-items:stretch; }
+.submit-btn {
+  flex:1; padding:clamp(13px,2.5vw,16px) 10px; border:none;
+  border-radius:var(--btn-radius);
+  background:linear-gradient(135deg,var(--purple-light),var(--blue));
+  color:white; font-family:'Fredoka One',cursive; font-size:clamp(1.1rem,3vw,1.3rem);
+  cursor:pointer; box-shadow:0 5px 18px rgba(167,139,250,0.45);
+  transition:transform 0.15s,box-shadow 0.15s; touch-action:manipulation; -webkit-user-select:none; user-select:none;
+}
+.submit-btn:hover { transform:translateY(-2px); } .submit-btn:active { transform:scale(0.97); }
+.hint-btn {
+  flex:0 0 auto; padding:clamp(13px,2.5vw,16px) clamp(12px,2.5vw,18px); border:none;
+  border-radius:var(--btn-radius);
+  background:linear-gradient(135deg,#fbbf24,#f59e0b); color:white;
+  font-family:'Fredoka One',cursive; font-size:clamp(1.1rem,3vw,1.3rem);
+  cursor:pointer; box-shadow:0 5px 18px rgba(251,191,36,0.4);
+  transition:transform 0.15s,box-shadow 0.15s; touch-action:manipulation; -webkit-user-select:none; user-select:none; display:none;
+}
+.hint-btn:hover { transform:translateY(-2px); } .hint-btn:active { transform:scale(0.97); }
+.hint-btn.pulsing { animation:hint-pulse 1.4s ease-in-out infinite; }
+@keyframes hint-pulse { 0%,100%{box-shadow:0 5px 18px rgba(251,191,36,0.4)} 50%{box-shadow:0 5px 28px rgba(251,191,36,0.8),0 0 0 4px rgba(251,191,36,0.3)} }
+.skip-btn {
+  flex:0 0 auto; padding:clamp(13px,2.5vw,16px) clamp(10px,2vw,14px); border:none;
+  border-radius:var(--btn-radius); background:#f3f4f6; color:#6b7280;
+  font-family:'Fredoka One',cursive; font-size:clamp(0.85rem,2.2vw,1rem);
+  cursor:pointer; transition:all 0.2s; display:none; touch-action:manipulation; -webkit-user-select:none; user-select:none;
+}
+.skip-btn:hover { background:#e5e7eb; color:#374151; } .skip-btn:active { transform:scale(0.97); }
+
+/* HINT BOX */
+.hint-box {
+  display:none; margin-top:10px;
+  background:linear-gradient(135deg,#fffbeb,#fef3c7);
+  border:2px solid #fbbf24; border-radius:14px; padding:12px 14px; text-align:center;
+}
+.hint-box-label { font-size:0.75rem; font-weight:800; color:#92400e; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+.hint-box-text  { font-size:clamp(0.85rem,2.5vw,0.98rem); font-weight:700; color:#78350f; line-height:1.5; }
+.hint-replay-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  margin-top:8px; padding:6px 14px; border:none; border-radius:50px;
+  background:#f59e0b; color:white; font-family:'Fredoka One',cursive;
+  font-size:0.88rem; cursor:pointer; transition:transform 0.15s; touch-action:manipulation;
+}
+.hint-replay-btn:hover { transform:scale(1.05); } .hint-replay-btn:active { transform:scale(0.97); }
+
+.next-btn {
+  width:100%; padding:clamp(13px,2.5vw,15px); border:none;
+  border-radius:var(--btn-radius);
+  background:linear-gradient(135deg,var(--green),#10b981); color:white;
+  font-family:'Fredoka One',cursive; font-size:clamp(1.1rem,3vw,1.3rem);
+  cursor:pointer; box-shadow:0 5px 18px rgba(52,211,153,0.4);
+  transition:transform 0.15s; margin-top:10px; display:none; touch-action:manipulation;
+}
+.next-btn:hover { transform:translateY(-2px); } .next-btn:active { transform:scale(0.97); }
+
+/* FEEDBACK */
+.feedback { min-height:50px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; margin:8px 0 2px; }
+.feedback-emoji { font-size:clamp(1.8rem,5vw,2.3rem); display:none; }
+.feedback-text  { font-weight:800; font-size:clamp(0.9rem,2.5vw,1rem); display:none; }
+.feedback-text.correct-text  { color:var(--green-dark); }
+.feedback-text.wrong-text    { color:#dc2626; }
+.feedback-text.spelling-text { color:#b45309; }
+.alt-hint {
+  margin-top:8px; font-size:clamp(0.78rem,2vw,0.85rem); color:var(--purple); font-weight:700; display:none;
+  background:#f5f3ff; border-radius:10px; padding:7px 12px;
+}
+
+/* PROGRESS */
+.progress-bar-wrap { width:100%; max-width:500px; margin-top:14px; background:rgba(255,255,255,0.3); border-radius:50px; height:9px; overflow:hidden; }
+.progress-bar-fill { height:100%; background:white; border-radius:50px; transition:width 0.4s ease; }
+
+/* CELEBRATION */
+.celebration { display:none; text-align:center; padding:20px 16px; max-width:500px; width:100%; }
+.celebration h2 { font-family:'Fredoka One',cursive; font-size:clamp(2rem,7vw,2.8rem); color:white; text-shadow:2px 3px 0 rgba(0,0,0,0.15); margin-bottom:10px; }
+.celebration p  { color:rgba(255,255,255,0.92); font-size:clamp(1rem,3vw,1.15rem); font-weight:700; margin-bottom:22px; }
+.restart-btn {
+  padding:15px 36px; border:none; border-radius:50px; background:white; color:var(--purple);
+  font-family:'Fredoka One',cursive; font-size:clamp(1.2rem,4vw,1.5rem);
+  cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,0.15); transition:transform 0.2s; touch-action:manipulation;
+}
+.restart-btn:hover { transform:scale(1.05); } .restart-btn:active { transform:scale(0.97); }
+
+.confetti-piece { position:fixed; width:10px; height:13px; top:-20px; border-radius:3px; animation:confetti-fall 3s ease-in forwards; pointer-events:none; z-index:999; }
+@keyframes confetti-fall { 0%{transform:translateY(0) rotateZ(0);opacity:1} 100%{transform:translateY(110dvh) rotateZ(720deg);opacity:0} }
+
+@media (min-width:600px) { body{padding:24px 20px 40px} .card{padding:28px} .clock-svg{width:160px;height:160px} .choices-grid,.vocab-grid{gap:12px} }
+@media (min-width:900px) { .card{max-width:520px} }
+@supports (padding:max(0px)) {
+  body { padding-left:max(12px,env(safe-area-inset-left)); padding-right:max(12px,env(safe-area-inset-right)); padding-bottom:max(32px,env(safe-area-inset-bottom)); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">🌟 English Fun!</div>
+  <div class="stars-display" id="starsDisplay">⭐ 0 כוכבים</div>
+</div>
+
+<div class="mode-selector">
+  <button class="mode-btn active" id="btnClock"   onclick="switchMode('clock')">🕐 שעון</button>
+  <button class="mode-btn"        id="btnNumbers" onclick="switchMode('numbers')">🔢 מספרים</button>
+  <button class="mode-btn"        id="btnVocab"   onclick="switchMode('vocab')">📚 מילים</button>
+</div>
+
+<div class="card" id="mainCard">
+  <div class="attempts-badge" id="attemptsBadge"></div>
+
+  <!-- ===== CLOCK ===== -->
+  <div id="clockMode">
+    <div class="question-label" id="clockLabel">בחר את השעה הנכונה באנגלית</div>
+    <div class="clock-wrap">
+      <svg class="clock-svg" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="95" fill="#f5f3ff" stroke="#7c3aed" stroke-width="6"/>
+        <circle cx="100" cy="100" r="5" fill="#7c3aed"/>
+        <text x="100" y="22"  text-anchor="middle" font-size="14" font-family="Fredoka One" fill="#4c1d95">12</text>
+        <text x="178" y="105" text-anchor="middle" font-size="14" font-family="Fredoka One" fill="#4c1d95">3</text>
+        <text x="100" y="188" text-anchor="middle" font-size="14" font-family="Fredoka One" fill="#4c1d95">6</text>
+        <text x="22"  y="105" text-anchor="middle" font-size="14" font-family="Fredoka One" fill="#4c1d95">9</text>
+        <g id="ticks"></g>
+        <line id="hourHand"   x1="100" y1="100" x2="100" y2="58" stroke="#4c1d95" stroke-width="7" stroke-linecap="round"/>
+        <line id="minuteHand" x1="100" y1="100" x2="100" y2="32" stroke="#7c3aed" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="time-hebrew" id="timeHebrew"></div>
+    <div class="choices-grid" id="choicesGrid"></div>
+  </div>
+
+  <!-- ===== NUMBERS ===== -->
+  <div id="numbersMode" style="display:none;">
+    <div class="question-label">כתוב את המספר באנגלית</div>
+    <div class="number-big" id="numberDisplay"></div>
+    <input class="answer-input" id="answerInput" type="text" placeholder="כתוב כאן באנגלית..."
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text"/>
+  </div>
+
+  <!-- ===== VOCAB ===== -->
+  <div id="vocabMode" style="display:none;">
+    <div class="question-label">מה הפירוש של המילה?</div>
+    <div class="vocab-word-wrap">
+      <div class="vocab-word" id="vocabWord"></div>
+      <button class="vocab-speak-btn" onclick="speakCurrentWord()">🔊 שמע את המילה</button>
+    </div>
+    <div class="vocab-grid" id="vocabGrid"></div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="feedback">
+    <div class="feedback-emoji" id="feedbackEmoji"></div>
+    <div class="feedback-text"  id="feedbackText"></div>
+  </div>
+  <div class="alt-hint" id="altHint"></div>
+
+  <!-- HINT BOX -->
+  <div class="hint-box" id="hintBox">
+    <div class="hint-box-label">💡 רמז</div>
+    <div class="hint-box-text" id="hintBoxText"></div>
+    <button class="hint-replay-btn" onclick="replayHint()">🔊 שמע שוב</button>
+  </div>
+
+  <!-- ACTION BUTTONS -->
+  <div class="action-row" id="actionRow">
+    <button class="submit-btn" id="submitBtn" onclick="checkAnswer()">✅ בדוק!</button>
+    <button class="hint-btn"   id="hintBtn"   onclick="showHint()">💡</button>
+    <button class="skip-btn"   id="skipBtn"   onclick="skipQuestion()">דלג ⏭</button>
+  </div>
+  <button class="next-btn" id="nextBtn" onclick="nextQuestion()">השאלה הבאה ⏭</button>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+</div>
+
+<div class="celebration" id="celebration">
+  <h2 id="celebTitle">🎉 כל הכבוד!</h2>
+  <p  id="celebMsg"></p>
+  <button class="restart-btn" onclick="restartGame()">🔄 עוד סיבוב!</button>
+</div>
+
+<script>
+'use strict';
+
+// ============================================================
+// AUDIO
+// ============================================================
+let audioCtx;
+function getCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function tone(freq,dur,vol=0.28,delay=0){
+  try{
+    const ctx=getCtx(),o=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain(),g2=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);o2.connect(g2);g2.connect(ctx.destination);
+    o.type='sine';o.frequency.setValueAtTime(freq,ctx.currentTime+delay);
+    o2.type='sine';o2.frequency.setValueAtTime(freq*2,ctx.currentTime+delay);
+    g.gain.setValueAtTime(0,ctx.currentTime+delay);g.gain.linearRampToValueAtTime(vol,ctx.currentTime+delay+0.02);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+delay+dur);
+    g2.gain.setValueAtTime(0,ctx.currentTime+delay);g2.gain.linearRampToValueAtTime(vol*0.15,ctx.currentTime+delay+0.02);g2.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+delay+dur*0.7);
+    o.start(ctx.currentTime+delay);o.stop(ctx.currentTime+delay+dur+0.01);
+    o2.start(ctx.currentTime+delay);o2.stop(ctx.currentTime+delay+dur+0.01);
+  }catch(e){}
+}
+function sfxSuccess(){[523,659,784].forEach((f,i)=>tone(f,0.35,0.28,i*0.11));}
+function sfxSuperSuccess(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,0.38,0.32,i*0.09));setTimeout(()=>[1047,1175,1319].forEach((f,i)=>tone(f,0.25,0.16,i*0.07)),550);}
+function sfxWrong(){try{const ctx=getCtx(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(280,ctx.currentTime);o.frequency.linearRampToValueAtTime(170,ctx.currentTime+0.3);g.gain.setValueAtTime(0.2,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.32);o.start();o.stop(ctx.currentTime+0.35);}catch(e){}}
+function sfxHint(){tone(880,0.18,0.18);tone(1047,0.2,0.18,0.16);}
+function sfxSkip(){tone(440,0.18,0.14);tone(370,0.18,0.14,0.15);}
+function sfxFinale(){[523,659,784,880,1047,880,784,659,784,1047].forEach((f,i)=>tone(f,0.32,0.34,i*0.12));}
+
+// ============================================================
+// SPEECH
+// ============================================================
+let femaleVoice=null;
+function loadVoice(){
+  const tryLoad=()=>{
+    const voices=speechSynthesis.getVoices();
+    const pref=['Samantha','Victoria','Karen','Moira','Tessa','Fiona','Google US English','Microsoft Zira','Microsoft Hazel'];
+    for(const name of pref){const v=voices.find(v=>v.name.includes(name)&&v.lang.startsWith('en'));if(v){femaleVoice=v;return;}}
+    femaleVoice=voices.find(v=>v.lang==='en-US')||voices.find(v=>v.lang.startsWith('en'))||null;
+  };
+  if(speechSynthesis.getVoices().length)tryLoad();
+  speechSynthesis.onvoiceschanged=tryLoad;
+}
+loadVoice();
+function speakEn(text,rate=0.88,pitch=1.15){
+  if(!window.speechSynthesis)return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US';u.rate=rate;u.pitch=pitch;
+  if(femaleVoice)u.voice=femaleVoice;
+  speechSynthesis.speak(u);
+}
+
+const spokenCorrectFirst=['Amazing! Great job!','Wow, perfect!','Excellent! You got it!','Brilliant! Well done!','Fantastic! You rock!','Outstanding! Yes!','Super! Spot on!'];
+const spokenCorrectRetry=['Yes! Well done!','Good job! You made it!','Nice work! Keep going!',"Great! You got there!",'That\'s right! Hooray!'];
+const spokenWrong=['Not quite! Try again!','Oops! Give it another go!','Almost! Try once more!',"Don't worry! Try again!",'Keep trying, you can do it!','So close! One more try!'];
+
+// ============================================================
+// VOCAB DATA — 55 words
+// ============================================================
+const VOCAB = [
+  {word:'sky',        he:'שמיים',      emoji:'🌌', distractors:['🌊','🌲','🏠']},
+  {word:'ice cream',  he:'גלידה',      emoji:'🍦', distractors:['🍕','🍎','🎂']},
+  {word:'mother',     he:'אמא',        emoji:'👩', distractors:['👴','🐶','👦']},
+  {word:'park',       he:'פארק',       emoji:'🌳', distractors:['🏖️','🏫','🏪']},
+  {word:'beautiful',  he:'יפה',        emoji:'🌸', distractors:['😢','💥','🌧️']},
+  {word:'shoes',      he:'נעליים',     emoji:'👟', distractors:['👒','🧤','👜']},
+  {word:'read a book',he:'לקרוא ספר',  emoji:'📖', distractors:['⚽','🎵','🍳']},
+  {word:'coat',       he:'מעיל',       emoji:'🧥', distractors:['👙','🩲','🧢']},
+  {word:'stand',      he:'לעמוד',      emoji:'🧍', distractors:['🏊','🛌','🏃']},
+  {word:'mouth',      he:'פה',         emoji:'👄', distractors:['👁️','👂','🫀']},
+  {word:'sunny',      he:'שמשי',       emoji:'☀️', distractors:['⛈️','🌨️','🌫️']},
+  {word:'warm',       he:'חמים',       emoji:'🌡️', distractors:['❄️','💧','🌬️']},
+  {word:'boots',      he:'מגפיים',     emoji:'🥾', distractors:['👒','🧣','🕶️']},
+  {word:'play football',he:'לשחק כדורגל',emoji:'⚽',distractors:['🏀','🎾','🏊']},
+  {word:'cloud',      he:'עננים',      emoji:'☁️', distractors:['⭐','🌈','🌊']},
+  {word:'they',       he:'הם / הן',    emoji:'👥', distractors:['👤','🧍','🫵']},
+  {word:'father',     he:'אבא',        emoji:'👨', distractors:['👩','👶','🧓']},
+  {word:'children',   he:'ילדים',      emoji:'👧🧒',distractors:['👴','🐱','🌺']},
+  {word:'climb',      he:'לטפס',       emoji:'🧗', distractors:['🏊','🛹','🤸']},
+  {word:'summer',     he:'קיץ',        emoji:'🏖️', distractors:['❄️','🍂','🌸']},
+  {word:'near',       he:'קרוב',       emoji:'📍', distractors:['🌍','🔭','🚀']},
+  {word:'home',       he:'בית',        emoji:'🏠', distractors:['🏫','🏥','🏪']},
+  {word:'basketball', he:'כדורסל',     emoji:'🏀', distractors:['⚽','🎾','🏐']},
+  {word:'play',       he:'לשחק',       emoji:'🎮', distractors:['😴','📚','🍽️']},
+  {word:'dress',      he:'שמלה',       emoji:'👗', distractors:['👖','🧢','👟']},
+  {word:'socks',      he:'גרביים',     emoji:'🧦', distractors:['🧤','🎩','👙']},
+  {word:'store',      he:'חנות',       emoji:'🏪', distractors:['🏠','🏫','🏥']},
+  {word:'eyes',       he:'עיניים',     emoji:'👀', distractors:['👂','👃','🦷']},
+  {word:'too',        he:'גם / יותר מדי',emoji:'➕',distractors:['➖','❌','🔄']},
+  {word:'autumn',     he:'סתיו',       emoji:'🍂', distractors:['☃️','🌸','🏖️']},
+  {word:'funny',      he:'מצחיק',      emoji:'😂', distractors:['😢','😡','😴']},
+  {word:'winter',     he:'חורף',       emoji:'❄️', distractors:['🌸','🏖️','🍂']},
+  {word:'pants',      he:'מכנסיים',    emoji:'👖', distractors:['👗','🧢','🧣']},
+  {word:'cold',       he:'קר',         emoji:'🥶', distractors:['🥵','😴','😂']},
+  {word:'pool',       he:'בריכה',      emoji:'🏊', distractors:['🏖️','🛁','🌊']},
+  {word:'picture',    he:'תמונה',      emoji:'🖼️', distractors:['📚','🎵','🎭']},
+  {word:'fly a kite', he:'להפריח עפיפון',emoji:'🪁',distractors:['🚴','🏄','⛷️']},
+  {word:'shirt',      he:'חולצה',      emoji:'👕', distractors:['👗','🧥','👖']},
+  {word:'okay',       he:'בסדר',       emoji:'👌', distractors:['👎','✊','🤞']},
+  {word:'spring',     he:'אביב',       emoji:'🌸', distractors:['❄️','🍂','🏖️']},
+  {word:'good for you',he:'כל הכבוד',  emoji:'🏆', distractors:['😢','🤔','😴']},
+  {word:'come',       he:'בוא / תבואי',emoji:'🤗', distractors:['🏃','😴','🙅']},
+  {word:'game',       he:'משחק',       emoji:'🎲', distractors:['📚','🍽️','🛌']},
+  {word:'wall',       he:'קיר',        emoji:'🧱', distractors:['🏠','🌲','🛣️']},
+  {word:'sleep',      he:'לישון',      emoji:'😴', distractors:['🏃','🍽️','📖']},
+  {word:'old',        he:'זקן / ישן',  emoji:'👴', distractors:['👶','🆕','✨']},
+  {word:'wear',       he:'ללבוש',      emoji:'🧤', distractors:['🍽️','📖','💤']},
+  {word:'eat',        he:'לאכול',      emoji:'🍽️', distractors:['😴','📖','🏃']},
+  {word:'tree',       he:'עץ',         emoji:'🌲', distractors:['🌸','🌾','🍄']},
+  {word:'make',       he:'להכין / לעשות',emoji:'🔧',distractors:['😴','🏃','📖']},
+  {word:'snow',       he:'שלג',        emoji:'⛄', distractors:['🌧️','🌬️','☀️']},
+  {word:'nose',       he:'אף',         emoji:'👃', distractors:['👄','👁️','👂']},
+  {word:'who',        he:'מי',         emoji:'🕵️', distractors:['🤔','💬','❓']},
+  {word:'we',         he:'אנחנו',      emoji:'🫂', distractors:['👤','👥','🤝']},
+];
+
+// ============================================================
+// CLOCK & NUMBER DATA
+// ============================================================
+const ones=['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+const tens=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+function numToWord(n){if(n===0)return'zero';if(n===100)return'one hundred';if(n<20)return ones[n];const t=Math.floor(n/10),o=n%10;return o===0?tens[t]:tens[t]+' '+ones[o];}
+function normalize(s){return s.trim().toLowerCase().replace(/[''ʼ]/g,"'").replace(/\s+/g,' ');}
+
+function clockData(h,m){
+  const hw=ones[h],nh=ones[h===12?1:h+1],mw=numToWord(m);
+  if(m===0)return{correctAnswers:[`${hw} o'clock`],spoken:`${hw} o'clock`,text:`When the minute hand points to 12, we say the hour followed by a special word meaning "exactly on the hour". 🕛`,speak:`When the minute hand is on twelve, say the hour number, then a special word that means exactly on the hour. Can you remember it?`};
+  if(m===15)return{correctAnswers:[`quarter past ${hw}`,`fifteen past ${hw}`],spoken:`quarter past ${hw}`,text:`15 minutes is one quarter of an hour. 🍕 There are TWO ways to say this time — one uses the word "quarter" and one uses the number of minutes.`,speak:`Fifteen minutes is one quarter of an hour. Think of two ways — one uses the word quarter, one uses the number fifteen. Both go with the word past.`};
+  if(m===30)return{correctAnswers:[`half past ${hw}`,`thirty past ${hw}`],spoken:`half past ${hw}`,text:`30 minutes is half an hour. 🌗 There are TWO ways — one uses the word "half" and one uses the number of minutes.`,speak:`Thirty minutes is half an hour. Two ways — one uses the word half, one uses the number thirty. Both go with the word past.`};
+  if(m===45)return{correctAnswers:[`quarter to ${nh}`,`forty five past ${hw}`],spoken:`quarter to ${nh}`,text:`45 minutes — you're almost at the NEXT hour! 🔜 TWO ways: one counts forward, one counts backward to the next hour.`,speak:`Forty five minutes. Close to the next hour! One way uses forty five and past. The other uses quarter and to, counting back to the next hour.`};
+  return{correctAnswers:[`${mw} past ${hw}`],spoken:`${mw} past ${hw}`,text:`The minute hand shows ${m} minutes. 🕐 In English: minutes first, then a word meaning "after", then the hour.`,speak:`Look at the minute hand — it shows ${mw} minutes. Say the minutes first, then the word meaning after, then the hour number.`};
+}
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function allClockTimes(){const p=[];for(let h=1;h<=12;h++)for(let m=0;m<60;m+=5)p.push({h,m});return p;}
+
+function generateChoices(h,m){
+  const cd=clockData(h,m),correct=cd.correctAnswers,correctSet=new Set(correct.map(normalize));
+  const need=4-correct.length,distractors=[],used=new Set([...correctSet]);
+  for(const t of shuffle(allClockTimes())){
+    if(t.h===h&&t.m===m)continue;
+    const d=clockData(t.h,t.m),cand=d.correctAnswers[0],n=normalize(cand);
+    if(!used.has(n)){distractors.push(cand);used.add(n);if(distractors.length>=need)break;}
+  }
+  return{choices:shuffle([...correct,...distractors]),correctSet};
+}
+
+function buildClockQuestions(){
+  return shuffle(allClockTimes()).slice(0,14).map(({h,m})=>{
+    const cd=clockData(h,m),{choices,correctSet}=generateChoices(h,m);
+    return{type:'clock',h,m,choices,correctSet,spoken:cd.spoken,multiCorrect:cd.correctAnswers.length>1,hintText:cd.text,hintSpeak:cd.speak};
+  });
+}
+
+function buildNumberQuestions(){
+  return shuffle([...Array.from({length:100},(_,i)=>i+1)]).slice(0,14).map(n=>{
+    const word=numToWord(n);
+    let hintText,hintSpeak;
+    if(n===100){hintText=`This is the biggest number in the game! 💯 It's "one" followed by another word for 100.`;hintSpeak=`This is one hundred. Think: one, then the word for a group of one hundred.`;}
+    else if(n<10){hintText=`This is a single-digit number between 1 and 9. 🔢 These are special words you just have to remember!`;hintSpeak=`Numbers from one to nine are special words. You need to remember each one by heart.`;}
+    else if(n<20){hintText=`Numbers 11–19 are special in English — they don't follow a simple pattern. 🌟 You have to remember them!`;hintSpeak=`Numbers eleven to nineteen are special words. They don't follow a simple rule. Try to remember!`;}
+    else if(n%10===0){hintText=`This is a round number — only tens, no ones. 🔟 Think: twenty, thirty, forty... which one fits?`;hintSpeak=`A round number, only tens. Count along: twenty, thirty, forty, fifty, sixty, seventy, eighty, ninety. Which one?`;}
+    else{const t=Math.floor(n/10),o=n%10;hintText=`This number has two parts: the tens (${t*10}) and the ones (${o}). 💡 Say the tens word first, then the ones word — with a space.`;hintSpeak=`Split into two parts. First the tens — count by tens. Then the ones digit. Say them together!`;}
+    return{type:'numbers',number:n,correctAnswers:[word],spoken:word,hintText,hintSpeak};
+  });
+}
+
+// ============================================================
+// VOCAB QUESTION BUILDER
+// ============================================================
+function buildVocabQuestions(){
+  return shuffle([...VOCAB]).slice(0,14).map(item=>{
+    // 4 options: correct + 3 distractors from item.distractors
+    // Each option: { emoji, he, isCorrect }
+    const correctOpt={emoji:item.emoji, he:item.he, isCorrect:true};
+    // pick 3 distractor emojis from item.distractors + other vocab for hebrew labels
+    const otherVocab=shuffle(VOCAB.filter(v=>v.word!==item.word));
+    const opts=[correctOpt];
+    for(let i=0;i<3;i++){
+      opts.push({emoji:item.distractors[i]||otherVocab[i].emoji, he:otherVocab[i].he, isCorrect:false});
+    }
+    return{type:'vocab',word:item.word,options:shuffle(opts),hintText:`Think about what "${item.word}" means in Hebrew. Look at each picture — which one matches?`,hintSpeak:`What does ${item.word} mean? Look carefully at each picture and think about the Hebrew word for each one.`};
+  });
+}
+
+function hebrewTime(h,m){return`${h}:${m===0?'00':(m<10?'0'+m:m)}`;}
+
+// ============================================================
+// PHRASES
+// ============================================================
+const correctFirst=['כל הכבוד! מדהים! 🎉','נכון לגמרי! ⭐','וואו, כמה חכם! 🌟','פגעת! 🎊','מושלם! ✨','גאה בך! 👏','בדיוק נכון! 🏆'];
+const correctRetry=['כן! נכון! 😄','יפה מאוד! 🌈','מצוין! 💪','הצלחת! 🎯','ידעתי שתצליח! 💜'];
+const wrongPhrases=['נסה שוב, אתה יכול! 💜','כמעט! עוד פעם 🙂','לא נורא, קדימה! 💪','עוד ניסיון! 🌟','זה לא קל, נסה שוב! 😊','אל תוותר! 🌈'];
+const rnd=arr=>arr[Math.floor(Math.random()*arr.length)];
+
+// ============================================================
+// STATE
+// ============================================================
+let mode='clock',questions=[],currentQ=0,stars=0,attempts=0,questionDone=false;
+let selectedCorrect=new Set(),currentHintSpeak='',currentVocabWord='';
+
+// ============================================================
+// GAME FLOW
+// ============================================================
+function switchMode(m){
+  mode=m;
+  ['btnClock','btnNumbers','btnVocab'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById(m==='clock'?'btnClock':m==='numbers'?'btnNumbers':'btnVocab').classList.add('active');
+  startGame();
+}
+
+function startGame(){
+  stars=0;currentQ=0;attempts=0;questionDone=false;selectedCorrect=new Set();
+  document.getElementById('celebration').style.display='none';
+  document.getElementById('mainCard').style.display='block';
+  updateStars();
+  if(mode==='clock')       questions=buildClockQuestions();
+  else if(mode==='numbers') questions=buildNumberQuestions();
+  else                      questions=buildVocabQuestions();
+  document.getElementById('clockMode').style.display   =mode==='clock'  ?'block':'none';
+  document.getElementById('numbersMode').style.display =mode==='numbers'?'block':'none';
+  document.getElementById('vocabMode').style.display   =mode==='vocab'  ?'block':'none';
+  loadQuestion();
+}
+
+function loadQuestion(){
+  attempts=0;questionDone=false;selectedCorrect=new Set();currentHintSpeak='';
+  document.getElementById('mainCard').classList.remove('correct-flash','wrong-flash');
+  ['feedbackEmoji','feedbackText','altHint','attemptsBadge','hintBox','nextBtn'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('actionRow').style.display='flex';
+  document.getElementById('submitBtn').style.display='block';
+  document.getElementById('hintBtn').style.display='block';
+  document.getElementById('skipBtn').style.display='none';
+  document.getElementById('hintBtn').classList.remove('pulsing');
+  updateProgress();
+
+  const q=questions[currentQ];
+
+  if(mode==='clock'){
+    drawClock(q.h,q.m);
+    document.getElementById('timeHebrew').textContent=hebrewTime(q.h,q.m);
+    document.getElementById('clockLabel').textContent=q.multiCorrect?'בחר את שתי הצורות הנכונות! 👆👆':'בחר את השעה הנכונה באנגלית';
+    renderClockChoices(q);
+    document.getElementById('submitBtn').style.display='none';
+  } else if(mode==='numbers'){
+    document.getElementById('numberDisplay').textContent=q.number;
+    const inp=document.getElementById('answerInput');
+    inp.value='';inp.classList.remove('correct','wrong');inp.disabled=false;
+    setTimeout(()=>inp.focus(),80);
+  } else {
+    // vocab
+    currentVocabWord=q.word;
+    document.getElementById('vocabWord').textContent=q.word;
+    renderVocabChoices(q);
+    document.getElementById('submitBtn').style.display='none';
+  }
+}
+
+// ============================================================
+// VOCAB SPEAK
+// ============================================================
+function speakCurrentWord(){
+  if(currentVocabWord) speakEn(currentVocabWord, 0.8, 1.12);
+}
+
+// ============================================================
+// VOCAB CHOICES
+// ============================================================
+function renderVocabChoices(q){
+  const grid=document.getElementById('vocabGrid');
+  grid.innerHTML='';
+  q.options.forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='vocab-choice';
+    btn.innerHTML=`<span class="vc-emoji">${opt.emoji}</span><span class="vc-hebrew">${opt.he}</span>`;
+    btn.onclick=()=>handleVocabChoice(btn,opt,q);
+    grid.appendChild(btn);
+  });
+}
+
+function handleVocabChoice(btn,opt,q){
+  if(questionDone)return;
+  if(opt.isCorrect){
+    btn.classList.add('correct-choice');
+    disableAllVocabChoices();
+    onCorrect(q);
+  } else {
+    attempts++;
+    btn.classList.add('wrong-choice');
+    btn.disabled=true;
+    sfxWrong();showFeedbackWrong();updateAttemptsBadge();
+    if(attempts===1)document.getElementById('hintBtn').classList.add('pulsing');
+    if(attempts>=2)document.getElementById('skipBtn').style.display='block';
+  }
+}
+function disableAllVocabChoices(){document.querySelectorAll('.vocab-choice').forEach(b=>b.disabled=true);}
+
+// ============================================================
+// CLOCK CHOICES
+// ============================================================
+function renderClockChoices(q){
+  const grid=document.getElementById('choicesGrid');
+  grid.innerHTML='';
+  q.choices.forEach(choice=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';btn.textContent=choice;
+    btn.onclick=()=>handleClockChoice(btn,choice,q);
+    grid.appendChild(btn);
+  });
+}
+function handleClockChoice(btn,choice,q){
+  if(questionDone)return;
+  if(q.correctSet.has(normalize(choice))){
+    btn.classList.add('correct-choice');btn.disabled=true;
+    selectedCorrect.add(normalize(choice));
+    if(q.multiCorrect&&selectedCorrect.size<q.correctSet.size){
+      sfxSuccess();
+      document.getElementById('feedbackEmoji').style.display='block';document.getElementById('feedbackText').style.display='block';
+      document.getElementById('feedbackEmoji').textContent='✅';
+      document.getElementById('feedbackText').textContent='נכון! עכשיו מצא את הצורה השנייה 🔍';
+      document.getElementById('feedbackText').className='feedback-text correct-text';
+      document.getElementById('altHint').textContent='💡 יש עוד צורה נכונה אחת – מצא אותה!';
+      document.getElementById('altHint').style.display='block';
+      speakEn('Correct! Now find the other way to say it!',0.88,1.15);
+    } else {disableAllClockChoices();onCorrect(q);}
+  } else {
+    attempts++;btn.classList.add('wrong-choice');btn.disabled=true;
+    sfxWrong();showFeedbackWrong();updateAttemptsBadge();
+    if(attempts===1)document.getElementById('hintBtn').classList.add('pulsing');
+    if(attempts>=2)document.getElementById('skipBtn').style.display='block';
+  }
+}
+function disableAllClockChoices(){document.querySelectorAll('.choice-btn').forEach(b=>b.disabled=true);}
+
+// ============================================================
+// SPELLING + NUMBER CHECK
+// ============================================================
+function levenshtein(a,b){
+  const m=a.length,n=b.length;
+  const dp=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i===0?j:j===0?i:0));
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+function classifyAnswer(val,correctAnswers){
+  if(correctAnswers.some(a=>normalize(a)===val))return'correct';
+  for(const a of correctAnswers){if(levenshtein(val,normalize(a))<=Math.max(2,Math.floor(normalize(a).length*0.2)))return'spelling';}
+  return'wrong';
+}
+function checkAnswer(){
+  if(questionDone)return;
+  const inp=document.getElementById('answerInput');
+  const val=normalize(inp.value);if(!val){inp.focus();return;}
+  const q=questions[currentQ];
+  const verdict=classifyAnswer(val,q.correctAnswers);
+  if(verdict==='correct'){inp.classList.add('correct');inp.disabled=true;onCorrect(q);}
+  else{
+    attempts++;inp.classList.add('wrong');sfxWrong();
+    if(verdict==='spelling')showFeedbackSpelling(val,q.correctAnswers[0]);
+    else showFeedbackWrong();
+    updateAttemptsBadge();
+    setTimeout(()=>{inp.classList.remove('wrong');inp.value='';inp.focus();},900);
+    if(attempts===1)document.getElementById('hintBtn').classList.add('pulsing');
+    if(attempts>=2)document.getElementById('skipBtn').style.display='block';
+  }
+}
+
+// ============================================================
+// HINT
+// ============================================================
+function showHint(){
+  const q=questions[currentQ];
+  currentHintSpeak=q.hintSpeak||'';
+  document.getElementById('hintBoxText').textContent=q.hintText||'';
+  document.getElementById('hintBox').style.display='block';
+  sfxHint();setTimeout(()=>speakEn(currentHintSpeak,0.8,1.12),250);
+  document.getElementById('hintBtn').classList.remove('pulsing');
+}
+function replayHint(){if(currentHintSpeak){sfxHint();setTimeout(()=>speakEn(currentHintSpeak,0.8,1.12),200);}}
+
+// ============================================================
+// CORRECT / WRONG / SKIP
+// ============================================================
+function onCorrect(q){
+  questionDone=true;
+  document.getElementById('actionRow').style.display='none';
+  document.getElementById('nextBtn').style.display='block';
+  document.getElementById('mainCard').classList.add('correct-flash');
+  document.getElementById('altHint').style.display='none';
+  document.getElementById('hintBtn').classList.remove('pulsing');
+  const emoji=document.getElementById('feedbackEmoji'),text=document.getElementById('feedbackText');
+  emoji.style.display='block';text.style.display='block';
+  if(attempts===0){
+    emoji.textContent=rnd(['🎉','⭐','🌟','🎊','✨','🏆','💫','🔥']);
+    text.textContent=rnd(correctFirst);
+    sfxSuperSuccess();launchConfetti(28);stars++;
+    setTimeout(()=>speakEn(rnd(spokenCorrectFirst),0.88,1.18),300);
+  } else {
+    emoji.textContent='👍';text.textContent=rnd(correctRetry);
+    sfxSuccess();launchConfetti(10);
+    setTimeout(()=>speakEn(rnd(spokenCorrectRetry),0.88,1.15),300);
+  }
+  text.className='feedback-text correct-text';updateStars();
+  if(mode==='clock'&&q.multiCorrect){
+    document.querySelectorAll('.choice-btn').forEach(b=>{
+      if(q.correctSet.has(normalize(b.textContent))&&!b.classList.contains('correct-choice'))b.classList.add('reveal-correct');
+    });
+  }
+  // For vocab: speak the word on correct
+  if(mode==='vocab') setTimeout(()=>speakEn(q.word,0.85,1.1),600);
+}
+
+function showFeedbackWrong(){
+  document.getElementById('feedbackEmoji').style.display='block';document.getElementById('feedbackText').style.display='block';
+  document.getElementById('feedbackEmoji').textContent='😅';document.getElementById('feedbackText').textContent=rnd(wrongPhrases);
+  document.getElementById('feedbackText').className='feedback-text wrong-text';
+  document.getElementById('mainCard').classList.add('wrong-flash');
+  setTimeout(()=>document.getElementById('mainCard').classList.remove('wrong-flash'),500);
+  setTimeout(()=>speakEn(rnd(spokenWrong),0.88,1.1),200);
+}
+function showFeedbackSpelling(typed,correct){
+  const t=typed,c=normalize(correct);
+  let screenMsg,spokenMsg;
+  if(t.length<c.length){screenMsg='כמעט! 📝 כתיב כמעט נכון — חסרה אות אחת';spokenMsg="Almost! You're missing one letter. Look carefully!";}
+  else if(t.length>c.length){screenMsg='כמעט! 📝 כתיב כמעט נכון — יש אות מיותרת';spokenMsg="Almost! You have one extra letter. Check your spelling!";}
+  else{screenMsg='כמעט! 📝 הכיוון נכון — יש טעות כתיב קטנה';spokenMsg="So close! One letter is wrong — check your spelling!";}
+  document.getElementById('feedbackEmoji').style.display='block';document.getElementById('feedbackText').style.display='block';
+  document.getElementById('feedbackEmoji').textContent='📝';document.getElementById('feedbackText').textContent=screenMsg;
+  document.getElementById('feedbackText').className='feedback-text spelling-text';
+  document.getElementById('mainCard').classList.add('wrong-flash');
+  setTimeout(()=>document.getElementById('mainCard').classList.remove('wrong-flash'),500);
+  setTimeout(()=>speakEn(spokenMsg,0.88,1.1),200);
+}
+function updateAttemptsBadge(){const b=document.getElementById('attemptsBadge');b.style.display='block';b.textContent=`ניסיון ${attempts}`;}
+
+function skipQuestion(){
+  questionDone=true;sfxSkip();
+  document.getElementById('actionRow').style.display='none';document.getElementById('nextBtn').style.display='block';
+  document.getElementById('feedbackEmoji').style.display='block';document.getElementById('feedbackText').style.display='block';
+  document.getElementById('feedbackEmoji').textContent='💡';document.getElementById('feedbackText').textContent='דילגנו על השאלה הזו';
+  document.getElementById('feedbackText').className='feedback-text wrong-text';
+  speakEn("That's okay! Let's try the next one!",0.88,1.1);
+  const q=questions[currentQ],alt=document.getElementById('altHint');
+  if(mode==='clock'){
+    disableAllClockChoices();
+    document.querySelectorAll('.choice-btn').forEach(b=>{if(q.correctSet.has(normalize(b.textContent)))b.classList.add('reveal-correct');});
+    alt.textContent='✏️ תשובות נכונות: '+[...q.correctSet].join(' / ');alt.style.display='block';
+  } else if(mode==='numbers'){
+    document.getElementById('answerInput').disabled=true;
+    alt.textContent='✏️ התשובה: '+q.correctAnswers[0];alt.style.display='block';
+  } else {
+    // vocab — reveal correct option
+    disableAllVocabChoices();
+    document.querySelectorAll('.vocab-choice').forEach(b=>{
+      const heSpan=b.querySelector('.vc-hebrew');
+      if(heSpan){const correctItem=VOCAB.find(v=>v.word===q.word);if(correctItem&&heSpan.textContent===correctItem.he)b.classList.add('reveal-correct');}
+    });
+    alt.textContent=`✏️ התשובה: ${q.word}`;alt.style.display='block';
+    setTimeout(()=>speakEn(q.word,0.85,1.1),300);
+  }
+}
+
+// ============================================================
+// NEXT / END
+// ============================================================
+function nextQuestion(){currentQ++;if(currentQ>=questions.length)showCelebration();else loadQuestion();}
+function showCelebration(){
+  document.getElementById('mainCard').style.display='none';
+  document.getElementById('progressFill').style.width='100%';
+  document.getElementById('celebration').style.display='block';
+  const total=questions.length,pct=Math.round((stars/total)*100);
+  const e=pct===100?'🏆':pct>=80?'🌟':pct>=60?'😊':'💪';
+  document.getElementById('celebTitle').textContent=`${e} סיימת!`;
+  document.getElementById('celebMsg').textContent=`ענית נכון בפעם הראשונה על ${stars} מתוך ${total} שאלות (${pct}%)`;
+  sfxFinale();launchConfetti(80);
+  setTimeout(()=>speakEn('Well done! You finished the game! You are amazing!',0.88,1.15),600);
+}
+function restartGame(){startGame();}
+
+// ============================================================
+// CLOCK DRAWING
+// ============================================================
+function drawClock(hour,minute){
+  const ha=(hour%12)*30+minute*0.5-90,ma=minute*6-90,cx=100,cy=100,hl=42,ml=62;
+  document.getElementById('hourHand').setAttribute('x2',cx+hl*Math.cos(ha*Math.PI/180));
+  document.getElementById('hourHand').setAttribute('y2',cy+hl*Math.sin(ha*Math.PI/180));
+  document.getElementById('minuteHand').setAttribute('x2',cx+ml*Math.cos(ma*Math.PI/180));
+  document.getElementById('minuteHand').setAttribute('y2',cy+ml*Math.sin(ma*Math.PI/180));
+  let ticks='';
+  for(let i=0;i<60;i++){const a=(i*6-90)*Math.PI/180,inn=i%5===0?78:84;ticks+=`<line x1="${cx+inn*Math.cos(a)}" y1="${cy+inn*Math.sin(a)}" x2="${cx+92*Math.cos(a)}" y2="${cy+92*Math.sin(a)}" stroke="#c4b5fd" stroke-width="${i%5===0?2.5:1}" stroke-linecap="round"/>`;}
+  document.getElementById('ticks').innerHTML=ticks;
+}
+
+// ============================================================
+// UI
+// ============================================================
+function updateStars(){document.getElementById('starsDisplay').textContent=`⭐ ${stars} כוכבים`;}
+function updateProgress(){document.getElementById('progressFill').style.width=(currentQ/questions.length*100)+'%';}
+function launchConfetti(count=20){
+  const colors=['#f87171','#fbbf24','#34d399','#60a5fa','#a78bfa','#fb7185','#38bdf8'];
+  for(let i=0;i<count;i++)setTimeout(()=>{
+    const el=document.createElement('div');el.className='confetti-piece';
+    el.style.left=Math.random()*100+'vw';el.style.background=colors[Math.floor(Math.random()*colors.length)];
+    el.style.animationDuration=(1.8+Math.random()*2)+'s';el.style.animationDelay=Math.random()*0.3+'s';
+    el.style.transform=`rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(el);setTimeout(()=>el.remove(),4500);
+  },i*35);
+}
+
+// ============================================================
+// KEYBOARD + AUDIO UNLOCK
+// ============================================================
+document.getElementById('answerInput').addEventListener('keydown',e=>{if(e.key==='Enter'){if(!questionDone)checkAnswer();else nextQuestion();}});
+document.addEventListener('click',()=>{try{getCtx().resume();}catch(e){}},{once:true});
+
+startGame();
+</script>
+</body>
+</html>
